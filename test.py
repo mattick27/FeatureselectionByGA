@@ -2,7 +2,7 @@ import numpy as np
 import random
 from sklearn import linear_model
 import math
-import threading
+import time
 class stru:
     def __init__(self,a,b):
         self.feature = a
@@ -17,15 +17,15 @@ weigth = []
 bestAcc = 0
 bestWeigth = []
 listBestWeigth = []
-population = 4000
+population = 8000
 mutateRate = 0.1
 avgAcc = 0
 def check(per):
     global data,bestAcc,bestWeigth,avgAcc
     temp = []
     x_Select = []
-    for i in range(512):
-        per.weigth.append(random.choice([True, False]))
+   # for i in range(512):
+        #per.weigth.append(random.choice([True, False]))
     for i in range(200):
         selectedFeature = []
         for j in range(512):
@@ -63,9 +63,11 @@ def check(per):
     acc = (acc/len(pred))*100
     if(acc > bestAcc):
         bestAcc = acc
+        #print('this is per weigth' + str(len(per.weigth)))
         bestWeigth = per.weigth
     per.acc = acc
     avgAcc = avgAcc + acc
+    
 def findSurvive(per):
     pool = []
     for i in range(len(per)):
@@ -81,18 +83,20 @@ def generate(pool):
         dad = math.floor(random.uniform(0,len(pool)))
         mom = math.floor(random.uniform(0,len(pool)))
         output.append(crossOver(pool[dad],pool[mom]))
+    #print(len(output[0].weigth))
+
     return output
 
 def crossOver(dad,mom):
     DNA = []
     midPoint = math.floor(random.uniform(0,len(dad)))
-    for i in range(len(dad)):
+    for i in range(512):
         if(i>midPoint):
             DNA.append(dad[i])
         else:
             DNA.append(mom[i])
     if(random.uniform(0,1)<mutateRate):
-        DNA[math.floor(random.uniform(0,len(dad)))] = random.choice([True, False])
+        DNA[math.floor(random.uniform(0,512))] = random.choice([True, False])
         return person(DNA,0)
     else:
         return person(DNA,0)
@@ -106,14 +110,18 @@ def start(name):
             DNA.append(random.choice([True, False]))
         Gen.append(person(DNA,0))
     while(rounded < 100):
+        #print('this is gen[0] weigth = '+str(len(Gen[0].weigth)))
+        a = time.time()
         for i in range(len(Gen)):
             check(Gen[i])
         Gen = findSurvive(Gen)
         Gen = generate(Gen)
-        print('end Round ' + str(rounded) + 'best acc is ' + str(bestAcc) + 'threadName = ' +str(name)+' avgAcc = ' +str(avgAcc/population))
+        print('end Round ' + str(rounded) + ' best acc is ' + str(bestAcc) + ' threadName = ' +str(name)+' avgAcc = ' +str(avgAcc/population) + ' time in use = ' + str(a-time.time()))
         listBestWeigth.append(bestWeigth)
         rounded = rounded + 1
         avgAcc = 0
+        np.save(str(rounded),bestWeigth)
+        #print('this is len bestWeigth'+str(len(bestWeigth)))
 start('a')
 np.save('final',bestWeigth)
 
